@@ -1,0 +1,36 @@
+﻿{
+  // iki türlü ayağa kaldırma yöntemi vardır.
+  //biri shopping.web.uı denen kestrel ve diğeri IIS Expresss
+  //bir web sitesi iki türlü sunucuda portta ayağa kalkar.
+  //https://localhost:44391/-->IIS
+  //https://localhost:7250/-->Kestrel dot.core ile gelen sunucudur. sunucuyu ayağa kaldırır
+  //gerçek bir projeyi dışarı açamayız özel ayarları yapamaz ancak hızlıdır ve işlemleri görmek için kullanılır.
+  //canlıda ııs kullanılır.
+  //
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:62494",
+      "sslPort": 0//44391//hhttps 0 çekersek çalışmaz security protokol
+    }
+  },
+  "profiles": {
+    "Shopping.WebUI": { //kestreldir
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:5167", //https://localhost:7074;https varsa bunu koyarız.
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development" //diyerek programdan isdevolopment çalışır.
+      }
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

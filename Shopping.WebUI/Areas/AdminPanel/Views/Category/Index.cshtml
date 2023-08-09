@@ -1,0 +1,275 @@
+﻿@using Shopping.Entity.POCO;
+@model List<Category>
+@{
+    ViewData["Title"] = "Kategori";
+    Layout = "~/Areas/AdminPanel/Views/Shared/_Layout.cshtml";
+}
+
+@Html.AntiForgeryToken()  <!-- Bu sayfa gidip gelirken arkada bir token oluşturur.ve biz request atınca back ende düşen token doğrulanıyor ve eşleşiyorsa o işlemi yap. -->
+<div class="card card-default">
+    <div class="card-header">
+        <h3 class="card-title">Kategori Listesi</h3>
+
+        <div class="card-tools">
+            <button type="button" class="btn btn-block btn-primary" data-toggle="modal" data-target="#modalNewProduct">Yeni Kategori</button>
+        </div>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <table id="tblCategory" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th style="width:85%" >Kategori Adı</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{foreach (var category in Model)
+                    {
+                        <tr>
+                            <td>@category.Name</td>
+
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-warning btnGetCategoryDetail" data-id="@category.Guid" data-toggle="modal" data-target="#modalUpdateProduct">Güncelle</button>
+                                    <button type="button" class="btn btn-danger btnRemoveCategory" data-id="@category.Guid">Sil</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                }
+
+               
+            </tbody>
+        </table>
+    </div>
+
+
+</div>
+<div class="modal fade" id="modalNewProduct">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Yeni Kategori</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="txtCategoryName">Kategori Adı</label>
+                    <input type="text" class="form-control" id="txtCategoryName" placeholder="Kategori Adını Giriniz...">
+                </div>
+                
+            </div>
+            <div class="modal-footer justify-content-between">
+                <a class="btn btn-default btnModalClose " data-dismiss="modal">Kapat</a> 
+                <button type="button" class="btn btn-primary" id="btnAddCategory">Kaydet</button>  <!-- button yerine a yazdık ve id sine btnsaveCategory koyduk -->
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal fade" id="modalUpdateProduct">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Kategori Güncelle</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="txtCategoryName">Kategori Adı</label>
+                    <input type="text" class="form-control" id="txtCategoryName_Update" placeholder="Kategori Adını Giriniz...">
+                </div>
+
+            </div>
+            <div class="modal-footer justify-content-between">
+                <a class="btn btn-default btnModalClose " data-dismiss="modal">Kapat</a>
+                <button type="button" class="btn btn-primary" id="btnUpdateCategory" >Kaydet</button>  <!-- button yerine a yazdık ve id sine btnsaveCategory koyduk -->
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+<script>
+  $(function (){
+        //jquery kütüphanesi yüklenmeden çalıştırma anlamına gelir.Layottta jquery kütüphanesini başa aldık.
+        //hackerlar boş bir html sayfasına web consoledan öğrendikleri url işlem ve guidi tutar. jqery kütüphanelerini ekleyip script arasına ajaxı yapıştırırız var category guıdı işlemi urlyi yazarız. xss zafieti video 4 haz 2.1
+        $("#tblCategory").DataTable
+        ({//datatable js export visible columns dan kolonlar düzenlenebilir.
+            "responsive": true, 
+            "lengthChange": false,
+            "autoWidth": false,
+            "buttons":[
+                    {
+                    extend: 'copyHtml5',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                    },
+            "csv",
+                        {
+                            extend: 'excelHtml5',
+                            exportOptions: {
+                                columns: ':visible'
+                            }
+                        },
+                        {
+                            extend: 'pdfHtml5',
+                            exportOptions: {
+                                columns: ':visible'
+                            }
+                        },
+            "print",
+            "colvis"]
+        }).buttons().container().appendTo('#tblCategory_wrapper .col-md-6:eq(0)');
+        
+        $(document).on('click','#btnAddCategory',function(){
+        //neye tıkladığımız zaman #btnsavecategory tıkladığımızda kaydet işlemi yapacak.
+        //id ye bağlanacağımız zaman # ile başladık #btnsavecategory
+        //bu sil işlemini gerçekleştirirken hepsine tik ver seçili olanların sil işlemini gerçekleştir. bunu dene.
+        var category =new Object();//tipi yok çünkü JS tip bilmez.
+        category.Name = $('#txtCategoryName').val();
+        $.ajax({
+        //frontend den backend e data göndermeye ve frontend den herhangi bir url post-get işlemi yapmamızı sağlar.
+            url: '/AddCategory',
+            type:'post',
+            data:{category},
+            success: function (response){
+                if (response.success)
+                {
+                        $('.btnModalClose').trigger('click');//kendilinden kayıt yaptıktan sonra kapatmak istiyorsak.
+                        Swal.fire({
+                            //position: 'top-end',
+                            icon: 'success',//tik işareti error dersek çarpı vs
+                            title: 'BAŞARILI',
+                            text: response.message,/*döneceğimiz mesaj*/
+                            showConfirmButton: true,
+                            timer: 3000
+                        });
+                    //Swal.fire('BAŞARILI',/*title*/response.message,'success');
+                }
+                else 
+                {
+                        Swal.fire('Hata', 'Hata Oluştu!', 'error');
+                }
+            },
+                //$('#modalNewProduct').modal('show')//hide dersek gizler//basıp kapatmak istiyorsak.
+
+                error: function (err) {
+                    Swal.fire('Hata', err.message, 'error');
+                }
+        });
+    
+    });
+        
+        $(document).on('click', '.btnGetCategoryDetail', function () {
+            var categoryGUID = $(this).attr('data-id');//attribute a direkt kendisini verirseniz get işlemi yapar.
+            $.ajax({
+                
+                url: '/GetCategory/' + categoryGUID,//get işlemlerinde web consoleda payload yoktur.
+                type: 'get',
+                success: function (response) {
+                    if (response.success) {
+                        $('#txtCategoryName_Update').val(response.categoryViewModel.categoryName);
+                        $('#btnUpdateCategory').attr('data-id', response.categoryViewModel.categoryGUID);//virgül işlemi sonrası setlemektir. value olarak onu alır.
+                        //attribute nedir?
+                       //4Haz 3.video 30-39dk önemli
+                    }
+                    else {
+                        Swal.fire('Hata', 'Hata Oluştu!', 'error');
+                    }
+                },
+                error: function (err) {
+                    Swal.fire('Hata', err.message, 'error');
+                }
+            });
+        });
+        //bu işlemi yaptığımızda web console da response olarak added time, id updated time added user vs hepsine erişebilir normalde erişebileceği alanlar ise ad ve guid olması gerekliydi. bunu engellemek için view model kavramı girer. sayfada göstermek istediğimiz alanları field ları bir tane yeni bir class view modele yazar onu gösteririz. buradan gelen datayı modele yazarız, category nin kendisini değilde 
+        
+        $(document).on('click', '#btnUpdateCategory', function () {
+            //Artık yeni obje oluşturmayacağız oluuşan nesne güncellenir.
+
+            categoryViewModel=new Object();
+            categoryViewModel.CategoryName = $('#txtCategoryName_Update').val();
+            categoryViewModel.CategoryGUID = $(this).attr('data-id');
+            $.ajax({
+            url: '/UpdateCategory',
+                type: 'post',
+                data: { categoryViewModel },
+                success: function (response) {
+                    if (response.success) 
+                    {
+                        $('.btnModalClose').trigger('click');//kendilinden kayıt yaptıktan sonra kapatmak istiyorsak.
+                        Swal.fire({
+                            //position: 'top-end',
+                            icon: 'success',//tik işareti error dersek çarpı vs
+                            title: 'BAŞARILI',
+                            text: response.message,/*döneceğimiz mesaj*/
+                            showConfirmButton: true,
+                            timer: 3000
+                        });
+                    }
+                },
+                error: function (err) {
+                    Swal.fire('Hata', err.message, 'error');
+                }
+            });
+        });
+        $(document).on('click','.btnRemoveCategory', function ()
+        { //sayfada ID bir tane olmak zorunda bu yüzden class verdik yukarıda.
+            //neye tıkladığımız zaman #btnsavecategory tıkladığımızda kaydet işlemi yapacak.
+            //classa bağlanacağımız zaman . ile başladık .btnremovecategory
+            var categoryGUID = $(this).attr('data-id');
+
+            Swal.fire({
+                title: 'Silmek İstediğinize Emin misiniz?',
+                showCancelButton: true,
+                confirmButtonText: 'Sil',
+                cancelButtonText: 'Vazgeç',
+            }).then((result) => {
+                if (result.isConfirmed){
+                    var token = $('input[name="__RequestVerificationToken"]').val();//tokenları save/Add category e ve tüm projeye ekle.
+                $.ajax({
+                        url: '/RemoveCategory',
+                        type: 'post',
+                        data: { __RequestVerificationToken: token, categoryGUID },//post isteklerinde data vardır.
+
+                        success: function (response) {
+                            if (response.success) {
+                               $('.btnModalClose').trigger('click');
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'BAŞARILI',
+                                    text: response.message,
+                                    showConfirmButton: false,
+                                    timer: 3000
+                                })
+                            }
+                                    else {
+                                    Swal.fire('Hata', 'Hata Oluştu!', 'error');
+                                }
+                        },
+                        error: function (err) {
+                            Swal.fire('Hata', err.message, 'error');
+                        }
+                    });
+                } 
+                else if (result.isDenied) 
+                {
+                    Swal.fire('Kayıt Yapılmadı', '', 'info');
+                }
+                
+            });  
+       });
+    
+  });
+</script>
